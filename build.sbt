@@ -28,9 +28,6 @@ version := "1.0"
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2"
 libraryDependencies += "org.postgresql" % "postgresql" % "42.2.19"
 
-// https://mvnrepository.com/artifact/com.typesafe.play/play-json
-libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.2"
-
 // https://mvnrepository.com/artifact/io.argonaut/argonaut-scalaz
 libraryDependencies += "io.argonaut" %% "argonaut-scalaz" % "6.3.3"
 
