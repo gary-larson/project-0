@@ -20,9 +20,9 @@ class DatabaseUtil {
     def getConnection(): Option[Connection] = {
         // create connection string
         val connectString = "jdbc:postgresql://localhost:5433/covid"
-        // hard coded user name **BAD**
+        // get environment user name
         val user = sys.env("USER_NAME")
-        // hard coded password **BAD**
+        // get environment password
         val password = sys.env("USER_PASSWORD")
         // attempt connection
         val conn = DriverManager.getConnection(connectString, user, password)
