@@ -32,8 +32,11 @@ class Cli {
         System.exit(1)
       }
     }
+    if (user.name == "q" || user.name == "Q") {
+      continueLoop = false
+    }
     while (continueLoop) {
-      printMainMenu()
+      printMainMenu(user.name)
       // read a character from the user
       val input = StdIn.readChar()
       
@@ -111,8 +114,9 @@ class Cli {
   /**
     * Method to print main menu
     */
-  def printMainMenu(): Unit = {
+  def printMainMenu(name: String): Unit = {
     println()
+    println(s"Welcome $name")
     println("   *** MAIN MENU ***")
     println("press '1' to print next screen of basic state data")
     println("press '2' to print next screen of percent state data")
@@ -143,21 +147,29 @@ class Cli {
         case '2' => {
           userOption = createUser()
         }
+        case '3' => {
+          deleteUser()
+          userOption = Some(User("", "", 0, 0))
+        }
         case 'q' => {
-          System.exit(0)
+          userOption = Some(User("q", "", 0, 0))
         }
         case 'Q' => {
-          System.exit(0)
+          userOption = Some(User("q", "", 0, 0))
         }
         case _ => {
-          println("Entry no valid please enter '1', '2', 'Q' or 'q'")
+          println("Entry no valid please enter '1', '2', '3', 'Q' or 'q'")
         }
       }
       userOption match {
         // process failure
         case None => {println("Try Again")}
         // process success
-        case Some(value) => { repeatMenu = false}
+        case Some(value) => { 
+          if (value.name != "") {
+            repeatMenu = false
+          }
+        }
       }
     }
     userOption.get
@@ -171,6 +183,7 @@ class Cli {
     println("   *** USER MENU ***")
     println("Enter '1' for an existing user.")
     println("Enter '2' to create a new user.)")
+    println("Enter '3' to delete a user.")
     println("Enter 'q' or 'Q' to quit program.")
   }
 
@@ -221,6 +234,50 @@ class Cli {
     // disconnect connection
     dbUtil.disconnect(conn.get)
     user
+  }
+
+  /**
+    * Method to get the user
+    *
+    * @return user
+    */
+  def deleteUser(): Unit = {
+    // Declare control variable
+    var nameExists = false
+    var notQuit = true
+    // Declare name variable
+    var name = ""
+    // Declare a database variable
+    val dbUtil = new DatabaseUtil()
+    // get database connection
+    val conn = dbUtil.getConnection()
+    conn match {
+      // if no connection to database terminate program
+      case None => {
+        println("Could not connect to database. Please correct and try again.")
+        System.exit(1)
+      }
+      case Some(value) => {}
+    }
+    // setup loop
+    while (!nameExists && notQuit) {
+      // get name
+      name = inputName()
+      if (name == "q" || name == "Q") {
+        notQuit = false
+      } else {
+        // check name
+        if (dbUtil.checkUserName(conn.get, name)) {
+          dbUtil.deleteUserData(conn.get, name)
+          nameExists = true
+        } else {
+          // print error
+          println(s"Name: $name does not exist. Please choose another.")
+        } 
+      }
+    }
+    // disconnect connection
+    dbUtil.disconnect(conn.get)
   }
 
   /**

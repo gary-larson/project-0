@@ -5,6 +5,7 @@ import java.sql.Connection
 import java.sql.SQLException
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import java.time.LocalDate
 
 /**
   * Class for database interactions
@@ -245,7 +246,7 @@ class DatabaseUtil {
         }
         // create prepared statement to create users table
         val statement = conn.prepareStatement("CREATE TABLE users (user_id serial " +
-            "primary key, name text UNIQUE, last_updated date DEFAULT now(), " +
+            "primary key, name text UNIQUE, last_updated text, " +
             "state_offset int DEFAULT 0, percent_offset int DEFAULT 0);")
         // execute statement
         statement.execute()
@@ -355,7 +356,6 @@ class DatabaseUtil {
         val statement = conn.prepareStatement("INSERT INTO users VALUES(DEFAULT, ?, " +
             "DEFAULT, ?, ?);")
         // add user's name parameter
-        println(user)
         statement.setString(1, user)
         // add query state offset parameter
         statement.setInt(2, stateOffset)
@@ -571,7 +571,7 @@ class DatabaseUtil {
       if (results.next()) {
         // get results
         val name = results.getString("name")
-        val lastUpdated = results.getDate("last_updated")
+        val lastUpdated = results.getString("last_updated")
         val stateOffset = results.getInt("state_offset")
         val percentOffset = results.getInt("percent_offset")
         val user = User(name, lastUpdated, stateOffset, percentOffset)
@@ -597,13 +597,15 @@ class DatabaseUtil {
         }
         // create prepared statement to update user's data in users table
         val statement = conn.prepareStatement("UPDATE users SET state_offset = ?, " +
-          "percent_offset = ?, last_updated = default WHERE name = ?;")
+          "percent_offset = ?, last_updated = ? WHERE name = ?;")
         // set user's basic query offset parameter
         statement.setInt(1, stateOffset)
         // set user's query percent offset parameter
         statement.setInt(2, percentOffset)
+        // set last_updated parameter
+        statement.setString(3, LocalDate.now.toString())
         // set user name parameter
-        statement.setString(3, name)
+        statement.setString(4, name)
         // execute statement
         statement.execute()
         // close statement
@@ -641,5 +643,29 @@ class DatabaseUtil {
         // close statement
         statement.close()
         isThere
+    }
+
+    /**
+      * Method to update user's data in users table
+      *
+      * @param connIn to database
+      * @param name of user
+      * @param offset forQueries
+      */
+    def deleteUserData(connIn: Connection, name: String): Unit = {
+        // move connection to a mutable variable
+        var conn = connIn
+        if (conn.isClosed()) {
+            // get connection
+            conn = getConnection().get
+        }
+        // create prepared statement to update user's data in users table
+        val statement = conn.prepareStatement("DELETE FROM  users WHERE name = ?;")
+        // set user name parameter
+        statement.setString(1, name)
+        // execute statement
+        statement.execute()
+        // close statement
+        statement.close()
     }
 }
